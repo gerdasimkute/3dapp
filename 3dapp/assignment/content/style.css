@@ -1,0 +1,129 @@
+/*
+ *
+ * This file contains hacks implemented to
+ * bypass the shortcomings of bootstrap 
+ * without SCSS
+ * 
+ */
+
+
+/* links */
+.bg-dark a {
+  --bs-link-color: var(--bs-gray-500);
+  --bs-link-hover-color: var(--bs-white);
+  text-decoration: none;
+}
+
+a:hover{
+  text-decoration: underline;
+  text-shadow: 0 .125rem .25rem var(--bs-gray);
+}
+
+a.active{
+  font-weight: bold;
+  /* --bs-link-color: rgb(255, 0, 0) !important; */
+  --bs-link-color: var(--bs-red);
+}
+
+/* fullscreen */
+body.h-100 {
+  min-height: 100vh;
+}
+
+#loading {
+  margin-top: 25vh !important;
+}
+
+/* animations */
+body, a, .animated{
+  transition-property: all;
+  transition-duration: 250ms;
+}
+
+/* loading */
+body>#container>section {
+  display: none;
+  transition-property: all;
+  transition-duration: 250ms;
+  transition-delay: 250ms;
+}
+
+/* loaded */
+body>#container>section.visible {
+  display: inherit;
+  opacity: 1;
+}
+#model-parent.loaded > #model-loading {
+  display: none;
+}
+#model-parent > #model-target {
+  display: none;
+  opacity: 0;
+}
+#model-parent.loaded > #model-target{
+  /* crap */
+  display: inherit;
+  opacity: 100%;
+}
+
+.fade-out {
+  transition-property: opacity;
+  transition-duration: 250ms;
+  opacity: 0 !important;
+}
+
+.fade-in {
+  display: inherit;
+  transition-property: opacity;
+  transition-duration: 250ms;
+  opacity: 0 !important;
+}
+
+/* nav button style from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_loading_buttons */
+/* not used */
+ .button {
+  background-color: #04AA6D;
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+/* Add a right margin to each icon */
+ .fa {
+  margin-left: -12px;
+  margin-right: 8px;
+} 
+
+/* navigational item fixes */
+nav {
+  display: flex;
+  justify-content: end;
+}
+
+nav div {
+  padding: 2em;
+}
+
+nav a:first-child {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* logo */
+@font-face {
+  /* i had to use some random font off the internet as a stop gap, */
+  /* hope your browser is updated and this doesn't cause any */
+  /* issues with it! */
+  /* mine complains about some table being present but having */
+  /* to not, so your mileage may vary until I find a brand logo */
+  /* that is free use. */
+  font-family: font-brand;
+  /* src: url(coca-cola-font-free.ttf); */
+  src: url(LOKICOLA.TTF);
+}
+.brand-text{
+  font-family: 'font-brand', monospace;
+  font-size: 2em;
+}

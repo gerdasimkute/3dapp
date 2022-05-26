@@ -1,0 +1,57 @@
+<nav class="bg-dark text-white py-2 shadow-lg" style="z-index: 2;">
+    <!-- a small price to pay for simpler code -->
+    <!-- the next link element is now unique by a[href] -->
+    <a href='./#home'>
+        <div>
+            <figure class="figure">
+                <img src="" class="figure-img img-fluid rounded brand-text" alt="Coca Cola">
+                <figcaption class="figure-caption" style="text-align: right;">brand&copy</figcaption>
+            </figure>
+        </div>
+    </a>
+    <a class='d-none d-md-inline' href='#home'>
+        <div>Home</div>
+    </a>
+    <a href='#project'>
+        <div>Project</div>
+    </a>
+    <a href="#about">
+        <div>About</div>
+    </a>
+</nav>
+<div id="container" class="container-fluid mh-100 w-100 p-0">
+
+    <!-- section error -->
+    <section class="p-5 border bg-warning text-muted " id="error">
+        <h1 class="display-2 text-white mb-5">
+            There was an error displaying the page
+        </h1>
+        Additional information: <br />
+        <span id="message" class="display-4 text-white">not specified</span>
+    </section>
+
+    <!-- section loading -->
+    <section class="visible h-100 container border bg-dark text-light p-5 mt-5 rounded-pill" id="loading">
+        <div class="container-fluid">
+            <p class="display-4 text-center mx-auto text-center">
+                The page is loading...
+            </p>
+        </div>
+    </section>
+
+    <!-- section home -->
+    <section id="home" style="z-index: -1;">
+        {{%%%}}
+    </section>
+
+    <!-- section project -->
+    <section id="project" class="p-5">
+        {{%%%}}
+    </section>
+
+    <!-- section about -->
+    <section id="about" class="p-5">
+        {{%%%}}
+    </section>
+
+</div>

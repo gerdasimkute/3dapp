@@ -1,0 +1,4 @@
+vendor/
+proj.bak/
+*.zip
+content/*/doc/**/*.*

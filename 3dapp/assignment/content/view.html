@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title> GS366 3DAPP Assignment </title>
+    <!-- CDN IS EASIER PLEASE DONT DEDUCT MARKS FOR THIS  -->
+    <script src="http://www.x3dom.org/release/x3dom.js"></script>
+    <link rel="stylesheet" href="http://www.x3dom.org/release/x3dom.css">
+    <link rel="stylesheet" href="content/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="content/style.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="content/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script id="php_broke">
+        setTimeout(() => {
+            const element = document.getElementById("loading");
+            const error_container = element.children[0];
+            const timeout = document.createElement("div");
+            timeout.classList.add('d-flex', 'justify-content-center');
+            timeout.innerHTML = "<p> if you're stuck on this page for longer than 5 seconds something is wrong with the backend </br> please restart the php engine";
+            error_container.appendChild(timeout);
+        }, 1500);
+    </script>
+</head>
+
+<body class="bg-dark text-light h-100">
+
+    {{%%%}}
+
+    <script id="helpers">
+        // current page fragment or #loading
+        const getPage = () => {
+            return window.location.hash || "#loading";
+        }
+
+        // delay a promise function
+        // courtesy of https://stackoverflow.com/questions/39538473/using-settimeout-on-promise-chain
+        const delay = (t, v) => {
+            return new Promise(function (resolve) {
+                setTimeout(resolve.bind(null, v), t)
+            });
+        }
+
+        // if using malformed url
+        const naughty = (href) => href.indexOf('/index.php');
+
+        // query all menu buttons
+        const selectNavButtons = () => document.querySelectorAll('nav a');
+    </script>
+
+    <script id="view">
+        class View {
+            constructor(entry, pages) {
+                this.pages = pages;
+                this.entry = entry;
+            }
+
+            async ready() {
+                await entry;
+                console.log("entry fired");
+
+                const fire = async () => {
+                    console.log("navigation event fired");
+
+                    await this.before(this.page);
+                    if (this.pages[this.page]) {
+                        const { afterExit } = this.pages[this.page];
+                        if (afterExit) await afterExit();
+                    }
+
+                    this.setPage(getPage());
+                    if (this.pages[this.page]) {
+                        const { beforeEntry } = this.pages[this.page];
+                        if (beforeEntry) await beforeEntry();
+                    }
+                    await this.after(this.page);
+
+                    console.log("navigation completed");
+                }
+
+                window.addEventListener('locationchange', fire);
+                fire();
+            }
+
+            /**
+             * simulated leaving a page
+             */
+            onBeforePageChange(cb) {
+                this.before = cb;
+                return this;
+            }
+
+            /**
+             * simulated arriving on a page
+             */
+            onAfterPageChange(cb) {
+                this.after = cb;
+                return this;
+            }
+
+            get page() {
+                return this.current_page;
+            }
+
+            setPage(value) {
+                this.current_page = value;
+            }
+
+            /**
+             * displays the error section
+             */
+            async showError(message) {
+                await this.hideAllSections();
+                console.log("showing error", message);
+                const section_error = document.querySelector('#error');
+                const span_message = document.querySelector('#error #message');
+                span_message.innerHTML = message;
+                this.showSection(section_error);
+            }
+
+            /**
+             * shows a page
+             */
+            async showSection(section) {
+                await delay();
+                console.log("showing section", section);
+                section.classList.add('fade-in', 'visible');
+                await delay(250);
+                section.classList.remove('fade-in');
+            }
+
+            /**
+             * disables all nav menu highlights
+             */
+            async hideMenuHighlight() {
+                await delay();
+                const menu_items = document.querySelectorAll('a');
+                menu_items.forEach(item => {
+                    item.classList.remove('active');
+                });
+            }
+
+            /**
+             * hides all pages
+             */
+            async hideAllSections() {
+                const sections = document.querySelectorAll("#container section");
+                const startFadeOut = () => {
+                    console.log("fading out all sections");
+                    sections.forEach(section => {
+                        section.classList.add('fade-out');
+                    });
+                };
+                const endFadeOut = () => {
+                    console.log("hiding all sections");
+                    sections.forEach(section => {
+                        section.classList.remove('visible', "fade-out");
+                    });
+                };
+                startFadeOut();
+                await delay(500);
+                endFadeOut();
+            }
+
+            /**
+             * performs custom logic to set this.page to active
+             */
+            async showActiveSection() {
+                const page = this.page;
+                console.log("showing section", page);
+                // last minute fixes because the application needs to be 3dapps/assignment
+                console.log("window location", window.location.pathname);
+                // if (window.location.pathname.endsWith('/')){
+                //     return window.location.assign('../../3dapp/assignment');
+                // }
+                if (page === "#loading") {
+                    return;
+                }
+                if (page === "#error") {
+                    this.showError("200 OK, you got exactly what you asked for");
+                    return
+                }
+                const nav_item = document.querySelector('a[href="' + page + '"]');
+                console.log("section has menu item", nav_item);
+                if (!nav_item) {
+                    this.showError(`404 Not Found, subpage "${encodeURI(page)}" not found`);
+                    return;
+                }
+                nav_item.classList.add('active');
+                const section = document.querySelector(page);
+                if (section) {
+                    this.showSection(section);
+                }
+            };
+        }
+    </script>
+
+    <script id="support_locationchange">
+        // make navigation work
+        // courtesy of https://stackoverflow.com/questions/6390341/how-to-detect-if-url-has-changed-after-hash-in-javascript
+        (() => {
+            let oldPushState = history.pushState;
+            history.pushState = function pushState() {
+                let ret = oldPushState.apply(this, arguments);
+                window.dispatchEvent(new Event('pushstate'));
+                window.dispatchEvent(new Event('locationchange'));
+                return ret;
+            };
+
+            let oldReplaceState = history.replaceState;
+            history.replaceState = function replaceState() {
+                let ret = oldReplaceState.apply(this, arguments);
+                window.dispatchEvent(new Event('replacestate'));
+                window.dispatchEvent(new Event('locationchange'));
+                return ret;
+            };
+
+            window.addEventListener('popstate', () => {
+                window.dispatchEvent(new Event('locationchange'));
+            });
+        })();
+    </script>
+
+    <script id="is_spa_app">
+        // declare entry point
+        console.log("main script running");
+        const entry = new Promise((resolve, reject) => {
+            console.log("created entry point promise");
+            window.addEventListener('load', resolve.bind(null));
+        });
+
+        const project_page = new ProjectPage();
+        const about_page = new AboutPage();
+        const pages = ({
+            "#project": {
+                "beforeEntry": () => {
+                    console.log("entering project");
+                    const body = document.querySelector('body');
+                    body.classList.remove('bg-dark');
+                    body.style['background-color'] = 'var(--bs-gray-800)';
+                    project_page.load();
+                },
+                "afterExit": () => {
+                    console.log("leaving project");
+                    const body = document.querySelector('body');
+                    body.classList.add('bg-dark');
+                    body.style['background-color'] = null;
+                }
+            },
+            "#about": {
+                "beforeEntry": () => {
+                    console.log("entering about");
+                    const body = document.querySelector('body');
+                    body.classList.remove('bg-dark');
+                    body.style['background-color'] = 'var(--bs-gray-800)';
+                    about_page.load();
+                },
+                "afterExit": () => {
+                    console.log("leaving about");
+                    const body = document.querySelector('body');
+                    body.classList.add('bg-dark');
+                    body.style['background-color'] = null;
+                }
+            },
+            "#loading": {
+                "beforeEntry": () => {
+                    console.log("on #loading", getPage());
+                    window.location.assign('#home');
+                }
+            }
+        });
+
+        const view = new View(entry, pages);
+
+        /**
+         * grab new page and set the new page visible
+         */
+        const performNavigation = async () => {
+            if (naughty(getPage()) > 0) {
+                const fqpn = window.location.href.substring(0, naughty(getPage()));
+                const link = `<a href="${fqpn}">Let me help you back to the home page</a>`;
+                return showError("It appears that you have opened the page directly. " + link);
+            }
+            const nav_buttons = selectNavButtons();
+            nav_buttons.forEach(button => {
+                const navigate = (evt) => {
+                    performNavigation();
+                    evt.preventDefault();
+                };
+                button.removeEventListener('action', navigate);
+                button.addEventListener('action', navigate);
+            });
+        }
+
+        const showError = (msg) => view.showError.bind(view, msg);
+
+        // view logic
+        view.onBeforePageChange(async (page) => {
+            await view.hideAllSections();
+            await view.hideMenuHighlight();
+        }).onAfterPageChange(async (page) => {
+            await performNavigation();
+            await view.showActiveSection();
+        }).ready();
+
+    </script>
+
+    <script id="support_async">
+        // check async functionality
+        const async = new Promise((resolve, reject) => {
+            var detector = document.createElement('script');
+            document.body.appendChild(detector);
+            detector.onload = resolve.bind(null, true);
+            detector.onerror = reject;
+            detector.async = true;
+            detector.src = 'content/isAsync.js';
+        }).catch(() => {
+            console.error("async is not supported!");
+            showError('Your browser does not support necessary functionality for this site: async functions');
+        });
+    </script>
+
+    <script id="easter_egg">
+        /* {{%%%}} */
+    </script>
+</body>
+
+</html>

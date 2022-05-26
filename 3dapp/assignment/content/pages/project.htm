@@ -1,0 +1,208 @@
+<!-- <section class="container mb-3">
+    <h2 class="p2">
+        First, a little introduction to get us started
+    </h2>
+
+    <p class="container d-flex justify-content-end">
+        I have no idea what I am doing with this page
+    </p>
+
+    <p class="container">
+        This is going to be a bit unorthodox
+    </p>
+
+    <p class="container d-flex justify-content-center">
+        Not out of ignorance, the spec is confusing
+    </p>
+</section> -->
+
+<section class="container mb-3" id="model-parent">
+    <h1 class="p1">Models</h1>
+    <section class="container-lg animated mx-5" id="model-loading">
+        <div class="row m-5 p-5 d-flex justify-content-around">
+            <div class="col"><i class="fa fa-circle-o-notch fa-spin"></i></div>
+            <div class="col"><i class="fa fa-circle-o-notch fa-spin"></i></div>
+            <div class="col"><i class="fa fa-circle-o-notch fa-spin"></i></div>
+        </div>
+    </section>
+    <section class="container-lg animated mx-5" id="model-target">
+        <div class="row m-5 p-5 d-flex justify-content-around">
+            <!-- template elements go into here -->
+        </div>
+    </section>
+</section>
+
+<!-- bailed on the idea, leaving this if more than 3 models -->
+<template id="model-row">
+    <div class="col">
+
+    </div>
+    <div class="col">
+
+    </div>
+    <div class="col">
+
+    </div>
+</template>
+
+<template id="model-section">
+    <div class="col mx-5 p-5 rounded container bg-light text-dark" style="min-height: 300px; cursor:pointer">
+        <h3>
+            <div class="header mb-3"></div>
+        </h3>
+        <div class="image"><img src='' class="rounded" alt="image" height="300px"></div>
+    </div>
+</template>
+
+<section class="animated overflow-hidden d-none container mb-3" id="viewer-section">
+    <h1 class="p1">Viewer</h1>
+    <section id='viewer-buttons' class="mx-5 mb-3 d-flex justify-content-center">
+        <button class="button btn btn-dark mx-3" onclick="cokeTexture()">
+            Coke Texture
+        </button>
+        <button class="button btn btn-dark mx-3" onclick="fantaTexture()">
+            Fanta Texture
+        </button>
+        <button class="button btn btn-dark mx-3" onclick="spain = !spain; spin()">
+            how it feels to chew 5 gum
+        </button>
+    </section>
+    <section class="mx-5 mb-3 d-flex justify-content-center">
+        <x3d width='500px' height='400px'>
+            <scene>
+                <transform rotation="1 0 0 -1.57">
+                    <transform rotation="1 0 0 1.57">
+                        <inline load="false" url="">
+                        </inline>
+                    </transform>
+            </scene>
+        </x3d>
+    </section>
+</section>
+
+<!-- here i considered using HTML5 templates  -->
+<!-- and we used them. hello welcome to my blog -->
+<!-- today we stop caring about good code -->
+<!-- it is deadline day -->
+<!-- i hope you're having a good evening -->
+<script id="project_page">
+    let spain = false; //without the pain
+
+    // appearance tag is used in x3dom to render a texture on a simple cube/mesh
+    // it appears that this library is not self- consistent
+    // and when you use an inline tag,
+    // as referenced by the UNSOLVED issues: 
+    // * https://stackoverflow.com/questions/34381357/x3dom-dynamically-change-imagetexture-with-an-inline-x3d-file
+    // * https://stackoverflow.com/questions/34381357/x3dom-dynamically-change-imagetexture-with-an-inline-x3d-file
+    // it appears adding a texture to an inline document is undocumented, at worst unsupported
+    // it is now too late in the development process to change the rendering method to work with the supported method
+    function fantaTexture() {
+        const model_dest = document.querySelector('x3d > scene');
+        const appearance = document.createElement('appearance');
+        appearance.innerHTML = '<ImageTexture url="database/uploads/fantaWrap.png"></ImageTexture>';
+        const inlineModel = (model_dest.querySelector('inline'));
+        inlineModel.appendChild(appearance);
+
+    }
+
+    function cokeTexture() {
+        const model_dest = document.querySelector('x3d > scene');
+        const appearance = document.createElement('appearance');
+        appearance.innerHTML = '<ImageTexture url="database/uploads/cokeWrap.png"></ImageTexture>';
+        const inlineModel = (model_dest.querySelector('inline'));
+        inlineModel.appendChild(appearance);
+    }
+
+    function spin() {
+        if (!spain) return;
+
+        const model_dest = document.querySelector('x3d > scene');
+        const transform = model_dest.querySelector('transform');
+        const x = Math.random();
+        const y = Math.random();
+        const z = Math.random();
+        const angle = Math.PI * Math.random();
+        const random_rotation = `${x} ${y} ${z} ${angle}`;
+        transform.setAttribute('rotation', random_rotation);
+        console.debug('spinning');
+        window.requestAnimationFrame(spin);
+    }
+
+    class ModelThumbnail {
+        constructor(key, name, image_path, templateElement) {
+            this.key = key;
+            this.name = name;
+            this.image_path = image_path;
+            const temp = document.querySelector('#model-section');
+            const clone = temp.content.cloneNode(true);
+            const divs = clone.querySelectorAll('.container div');
+            const [header, image] = divs;
+            header.textContent = name;
+            image.children[0].src = image_path;
+            this._element = clone;
+        }
+        get element() {
+            return this._element;
+        }
+    }
+
+
+    class ProjectPage {
+        constructor() {
+            const self = this;
+            this.initialised = false;
+            this.activeSelection = null;
+            this.viewer = document.querySelector('#viewer-section');
+            this.load = async () => {
+                if (self.initialised) return;
+
+                console.log("performing fetch");
+                const files = await fetch('./file');
+                const response = await files.json();
+                for (const file of response) {
+                    const { key, name, image_path } = file;
+                    const section = new ModelThumbnail(key, name, image_path);
+                    const appendAnchor = document.querySelector('#model-target > .row');
+                    appendAnchor.appendChild(section.element);
+                    const child = document.querySelector('#model-target > .row > .col:last-child');
+                    child.addEventListener('click', this.selectModel.bind(this, section));
+                }
+
+                const parent = document.querySelector('#model-parent');
+                parent.classList.add('loaded');
+
+                self.initialised = true;
+            }
+        }
+
+        async showModel(modelInfo) {
+            const request = await fetch(modelInfo);
+            const { model_path } = await request.json();
+            const model_dest = document.querySelector('x3d > scene inline');
+            model_dest.setAttribute('url', model_path);
+            model_dest.setAttribute('load', true);
+        }
+
+        selectModel(section) {
+            this.model = section;
+        }
+
+        makeViewerVisible() {
+            this.viewer.classList.remove('d-none');
+        }
+
+        get model() {
+            return this.activeSelection;
+        }
+
+        set model(selection) {
+            this.makeViewerVisible();
+            if (!selection instanceof ModelThumbnail) {
+                throw "RuntimeError: setting displayed model erroneously";
+            }
+            this.showModel('./file/' + selection.key);
+            this.activeSelection = selection;
+        }
+    }
+
+</script>
